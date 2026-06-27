@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>放置型テキストRPGプロトタイプ</title>
+    <title>放置型クラフトRPG 完全版プロトタイプ</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -25,37 +25,109 @@
     </header>
 
     <main id="main-content">
-        <section id="view-log" class="content-view active">
-            <div class="section-title">📖 探索の記録</div>
-            <div id="log-list">
-                </div>
+        
+        <section id="view-dungeon" class="content-view active">
+            <div class="section-title">🧭 ダンジョン選択</div>
+            <div class="dungeon-select-card">
+                <h3>はじめての草むら (瘴気濃度 0)</h3>
+                <p>ドロップ傾向：スライムの粘液（耐久、体力の鍛錬）</p>
+                <button class="action-btn start-dungeon-btn" data-dungeon="草むら" data-miasma="0">探索開始</button>
+            </div>
+            <div class="dungeon-select-card">
+                <h3>勇気の峡谷 (瘴気濃度 1)</h3>
+                <p>ドロップ傾向：錆びた鉄くず（頑丈、守りの鍛錬、腕力）</p>
+                <button class="action-btn start-dungeon-btn" data-dungeon="勇気の峡谷" data-miasma="1">探索開始</button>
+            </div>
+            <div class="dungeon-select-card">
+                <h3>終わりの魔王城 (瘴気濃度 5)</h3>
+                <p>ドロップ傾向：魔獣の皮・コア素材（全能力高Lv、超侵食）</p>
+                <button class="action-btn start-dungeon-btn" data-dungeon="魔王城" data-miasma="5">探索開始</button>
+            </div>
         </section>
 
-        <section id="view-dungeon" class="content-view">
-            <div class="section-title">🧭 ダンジョン選択</div>
-            <p>瘴気濃度を選択して出発する画面（開発中）</p>
-            <button id="btn-start-expedition" class="action-btn">「はじめての草むら」へ出発する</button>
+        <section id="view-log" class="content-view">
+            <div class="section-title">📖 探索の記録</div>
+            <div id="log-list"></div>
         </section>
-        <section id="view-smith" class="content-view"><div class="section-title">🛠️ 鍛冶屋</div><p>素材から装備をクラフト・厳選（開発中）</p></section>
-        <section id="view-collection" class="content-view"><div class="section-title">🔬 アイテム図鑑</div><p>装備を解析して限界突破効果を解放（開発中）</p></section>
-        <section id="view-item" class="content-view"><div class="section-title">🎒 アイテム</div><p>所持装備の確認・変更（開発中）</p></section>
-        <section id="view-status" class="content-view"><div class="section-title">🧍 ステータス</div><p>Lv1 / LvUP / Boostのステータス詳細（開発中）</p></section>
+
+        <section id="view-smith" class="content-view">
+            <div class="section-title">🛠️ 鍛冶屋クラフト</div>
+            <div class="smith-container">
+                <div class="recipe-card">
+                    <h4>木の棒 / こん棒 (武器)</h4>
+                    <p>必要素材: スライムの粘液 x2</p>
+                    <button class="craft-btn" data-type="weapon" data-recipe="こん棒">クラフト実行</button>
+                </div>
+                <div class="recipe-card">
+                    <h4>堅木の盾 (防具)</h4>
+                    <p>必要素材: 錆びた鉄くず x2</p>
+                    <button class="craft-btn" data-type="armor" data-recipe="堅木の盾">クラフト実行</button>
+                </div>
+                <div class="recipe-card">
+                    <h4>銅の指輪 (アクセサリー)</h4>
+                    <p>必要素材: スライムの粘液 x1, 錆びた鉄くず x1</p>
+                    <button class="craft-btn" data-type="accessory" data-recipe="銅の指輪">クラフト実行</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-collection" class="content-view">
+            <div class="section-title">🔬 アイテム図鑑と解析</div>
+            <div id="collection-list"></div>
+        </section>
+
+        <section id="view-item" class="content-view">
+            <div class="section-title">🎒 バッグ・装備一覧</div>
+            <div class="item-tab-headers">
+                <button class="item-filter-btn active" data-filter="all">全て</button>
+                <button class="item-filter-btn" data-filter="weapon">⚔️</button>
+                <button class="item-filter-btn" data-filter="armor">🛡️</button>
+                <button class="item-filter-btn" data-filter="accessory">💍</button>
+            </div>
+            <div id="inventory-list"></div>
+        </section>
+
+        <section id="view-status" class="content-view">
+            <div class="section-title">🧍 プレイヤーつよさ</div>
+            <div class="status-player-card">
+                <div class="status-avatar">たま</div>
+                <div class="status-rating">強さレーティング: <span id="status-rating-val">0</span></div>
+            </div>
+            
+            <h3>現在の装備品</h3>
+            <div class="equipped-summary-box">
+                <div>武器: <span id="eq-weapon-name">未装備</span></div>
+                <div>防具: <span id="eq-armor-name">未装備</span></div>
+                <div>指輪: <span id="eq-accessory-name">未装備</span></div>
+            </div>
+
+            <h3>詳細パラメーター</h3>
+            <table class="status-table">
+                <thead>
+                    <tr><th>ステータス</th><th>Lv1</th><th>LvUP</th><th>Boost</th></tr>
+                </thead>
+                <tbody id="status-table-body">
+                    </tbody>
+            </table>
+
+            <h3>装備アビリティ詳細</h3>
+            <div id="ability-detail-list" class="ability-detail-box"></div>
+        </section>
     </main>
 
     <div id="detail-modal" class="modal-overlay hidden">
         <div class="modal-content">
-            <div id="modal-title" class="modal-header">13:52 フェアリーを倒した</div>
-            <div id="modal-body" class="modal-body-list">
-                </div>
+            <div id="modal-title" class="modal-header">戦闘詳細</div>
+            <div id="modal-body" class="modal-body-list"></div>
             <button id="btn-close-modal" class="close-btn">閉じる</button>
         </div>
     </div>
 
     <nav id="bottom-nav">
-        <button class="nav-item" data-target="view-dungeon">
+        <button class="nav-item active" data-target="view-dungeon">
             <span class="icon">←</span><span class="label">DUNGEON</span>
         </button>
-        <button class="nav-item active" data-target="view-log">
+        <button class="nav-item" data-target="view-log">
             <span class="icon">📖</span><span class="label">LOG</span>
         </button>
         <button class="nav-item" data-target="view-smith">
