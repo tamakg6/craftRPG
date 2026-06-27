@@ -1,0 +1,126 @@
+body {
+    margin: 0;
+    background-color: #222;
+    color: #fff;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    overflow: hidden;
+    user-select: none;
+}
+
+#game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+}
+
+canvas {
+    display: block;
+    background: #34495e;
+}
+
+/* UI共通パネル */
+.ui-panel {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 15px;
+    border-radius: 8px;
+    border: 2px solid #f1c40f;
+    box-sizing: border-box;
+}
+
+#status-panel {
+    top: 10px;
+    left: 10px;
+    width: 250px;
+}
+
+#current-weapon {
+    color: #3498db;
+    font-weight: bold;
+}
+
+.kill-tracker {
+    margin-top: 10px;
+}
+
+#inventory-panel {
+    top: 10px;
+    right: 10px;
+    width: 250px;
+}
+
+#forge-panel {
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    height: 130px;
+    display: flex;
+    gap: 15px;
+    overflow-x: auto;
+}
+
+h3 {
+    margin: 0 0 10px 0;
+    color: #f1c40f;
+    font-size: 16px;
+    border-bottom: 1px solid #f1c40f;
+    padding-bottom: 3px;
+}
+
+.material-line {
+    display: flex;
+    justify-content: space-between;
+    margin: 5px 0;
+    font-size: 14px;
+}
+
+/* 鍛冶屋のレシピカード */
+.recipe-card {
+    background: #333;
+    border: 1px solid #7f8c8d;
+    padding: 10px;
+    border-radius: 5px;
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.weapon-bronze { color: #bdc3c7; }
+.weapon-iron { color: #95a5a6; }
+
+.weapon-desc {
+    font-size: 12px;
+    color: #aaa;
+    margin: 3px 0;
+}
+
+.req-materials {
+    font-size: 11px;
+    color: #e74c3c;
+}
+
+.recipe-card button {
+    background: #e67e22;
+    color: white;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+.recipe-card button:disabled {
+    background: #555;
+    cursor: not-allowed;
+}
+
+#controls-notice {
+    position: absolute;
+    bottom: 160px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+}
