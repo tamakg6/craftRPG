@@ -2,62 +2,68 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>理想の素材クラフトRPG</title>
-    <!-- 外部CSSファイルの読み込み -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>理想のログクラフトRPG</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div id="game-container">
-    <!-- 描画画面 -->
-    <canvas id="gameCanvas"></canvas>
+    <header id="status-header">
+        <div class="status-item">武器: <span id="current-weapon">ボロい剣</span> (ATK: <span id="player-atk">10</span>)</div>
+        <div class="status-item">討伐: <span id="kill-count">0</span></div>
+    </header>
 
-    <!-- ステータス画面 -->
-    <div id="status-panel" class="ui-panel">
-        <h3>プレイヤー情報</h3>
-        <div>装備中の武器: <span id="current-weapon">ボロい剣</span></div>
-        <div>攻撃力: <span id="player-atk">10</span></div>
-        <div class="kill-tracker">討伐数: <span id="kill-count">0</span></div>
+    <div id="inventory-bar">
+        <span>銅鉱石:<b id="mat-copper">0</b></span>
+        <span>鉄鉱石:<b id="mat-iron">0</b></span>
+        <span>魔物の骨:<b id="mat-bone">0</b></span>
     </div>
 
-    <!-- 素材インベントリ -->
-    <div id="inventory-panel" class="ui-panel">
-        <h3>所持クラフト素材</h3>
-        <div class="material-line"><span>銅鉱石:</span> <span id="mat-copper">0</span></div>
-        <div class="material-line"><span>鉄鉱石:</span> <span id="mat-iron">0</span></div>
-        <div class="material-line"><span>魔物の骨:</span> <span id="mat-bone">0</span></div>
+    <div class="tab-container">
+        <button id="tab-dungeon" class="tab-btn active" onclick="switchTab('dungeon')">ダンジョン探索</button>
+        <button id="tab-forge" class="tab-btn" onclick="switchTab('forge')">街の鍛冶屋</button>
     </div>
 
-    <!-- 操作説明 -->
-    <div id="controls-notice">
-        操作: 【マウス移動】で照準 / 【左クリック】で手動攻撃 / 【WASDキー】で移動
-    </div>
-
-    <!-- 鍛冶屋パネル（レシピ） -->
-    <div id="forge-panel" class="ui-panel">
-        <!-- レシピ1 -->
-        <div class="recipe-card">
-            <div>
-                <strong class="weapon-bronze">ブロンズソード</strong>
-                <div class="weapon-desc">攻撃力 +15</div>
-                <div class="req-materials">必要: 銅鉱石×3</div>
+    <main id="main-content">
+        <div id="panel-dungeon" class="content-panel active">
+            <div class="dungeon-select">
+                <p>探索するエリアを選択してください：</p>
+                <button class="action-btn" onclick="explore('cave')">薄暗い洞窟を探索 (手動)</button>
+                <button class="action-btn" onclick="explore('ruins')" style="margin-top: 10px; background: #9b59b6;">古びた遺跡を探索 (手動)</button>
             </div>
-            <button id="btn-craft-1" onclick="craftWeapon('bronze')">鍛造する</button>
         </div>
-        <!-- レシピ2 -->
-        <div class="recipe-card">
-            <div>
-                <strong class="weapon-iron">アイアンエッジ</strong>
-                <div class="weapon-desc">攻撃力 +35</div>
-                <div class="req-materials">必要: 鉄鉱石×5, 骨×2</div>
+
+        <div id="panel-forge" class="content-panel">
+            <p>集めた素材で武器を鍛造します（ガチャ・直ドロなし）：</p>
+            <div class="recipe-list">
+                <div class="recipe-card">
+                    <div class="recipe-info">
+                        <strong>ブロンズソード</strong>
+                        <span class="recipe-effect">攻撃力 10 → 25</span>
+                        <span class="recipe-cost">必要: 銅鉱石×3</span>
+                    </div>
+                    <button id="btn-craft-bronze" class="craft-btn" onclick="craftWeapon('bronze')">鍛造</button>
+                </div>
+                <div class="recipe-card">
+                    <div class="recipe-info">
+                        <strong>アイアンエッジ</strong>
+                        <span class="recipe-effect">攻撃力 10 → 50</span>
+                        <span class="recipe-cost">必要: 鉄鉱石×5, 骨×2</span>
+                    </div>
+                    <button id="btn-craft-iron" class="craft-btn" onclick="craftWeapon('iron')">鍛造</button>
+                </div>
             </div>
-            <button id="btn-craft-2" onclick="craftWeapon('iron')">鍛造する</button>
+        </div>
+    </main>
+
+    <div id="log-container">
+        <div id="game-log">
+            <div class="log-system">ゲームが開始されました。素材を集めて強力な武器を作りましょう。</div>
         </div>
     </div>
 </div>
 
-<!-- 外部JavaScriptファイルの読み込み -->
 <script src="game.js"></script>
 </body>
 </html>
