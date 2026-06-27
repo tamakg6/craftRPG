@@ -1,151 +1,136 @@
-* {
-    box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
+// ゲームの基本状態
+const player = {
+    atk: 10,
+    weapon: 'ボロい剣',
+    kills: 0
+};
+
+const inventory = {
+    copper: 0,
+    iron: 0,
+    bone: 0
+};
+
+// タブ切り替え（ダンジョン ↔ 鍛冶屋）
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.content-panel').forEach(panel => panel.classList.remove('active'));
+
+    document.getElementById(`tab-${tabId}`).classList.add('active');
+    document.getElementById(`panel-${tabId}`).classList.add('active');
 }
 
-body {
-    margin: 0;
-    padding: 0;
-    background-color: #1a1a1a;
-    color: #e0e0e0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    font-size: 14px;
-    height: 100vh;
-    overflow: hidden;
+// ログにテキストを追加する関数（自動で最下部へスクロール）
+function addLog(text, className = '') {
+    const logContainer = document.getElementById('log-container');
+    const gameLog = document.getElementById('game-log');
+    
+    const logLine = document.createElement('div');
+    if (className) logLine.classList.add(className);
+    logLine.innerText = text;
+    
+    gameLog.appendChild(logLine);
+    logContainer.scrollTop = logContainer.scrollHeight;
 }
 
-#game-container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    max-width: 500px; /* スマホ表示に最適な横幅 */
-    margin: 0 auto;
-    background: #222;
-    border-left: 1px solid #333;
-    border-right: 1px solid #333;
+// 手動探索・戦闘処理
+function explore(area) {
+    if (area === 'cave') {
+        addLog('▶ 薄暗い洞窟に入り、周囲を警戒しながら進んだ...', 'log-explore');
+        
+        // 50%の確率で敵と遭遇、それ以外は何もなし
+        if (Math.random() > 0.4) {
+            const damage = Math.floor(Math.random() * 5) + 1;
+            addLog(`⚔️ 野良スライム（HP: 20）が飛び出してきた！`, 'log-battle');
+            addLog(`⚔️ あなたの攻撃！ ${player.weapon}で${player.atk}のダメージを与えた。`, 'log-battle');
+            
+            if (player.atk >= 20) {
+                addLog(`💀 スライムを一撃で粉砕した！`, 'log-battle');
+                player.kills++;
+                // 100% 銅鉱石ドロップ
+                inventory.copper += 1;
+                addLog(`💎 ドロップ: 【銅鉱石】を1個拾った。`, 'log-get');
+            } else {
+                addLog(`⚔️ 反撃を受け、${damage}の痛手を負いながらも、なんとか泥臭く殴り倒した！`, 'log-battle');
+                player.kills++;
+                inventory.copper += 1;
+                addLog(`💎 ドロップ: 【銅鉱石】を1個拾った。`, 'log-get');
+            }
+        } else {
+            addLog('...しかし、何も見つからなかった。奥へ進もう。', 'log-system');
+        }
+    } 
+    
+    else if (area === 'ruins') {
+        addLog('▶ 古びた遺跡の崩れた回廊を慎重に進んだ...', 'log-explore');
+        
+        if (Math.random() > 0.3) {
+            const damage = Math.floor(Math.random() * 12) + 5;
+            addLog(`⚔️ スケルトン兵（HP: 45）が骨を鳴らして襲いかかってきた！`, 'log-battle');
+            
+            // プレイヤーの攻撃力によってログ分岐
+            if (player.atk >= 45) {
+                addLog(`💀 圧倒的破壊力！ スケルトン兵を瞬時に粉砕した！`, 'log-battle');
+                player.kills++;
+                gainRuinsMaterial();
+            } else {
+                addLog(`⚔️ 激しい手動戦闘！ あなたは${player.atk}ダメージを連打した。`, 'log-battle');
+                addLog(`⚔️ 骨の剣で斬りつけられ、${damage}ダメージを受けつつも執念で撃破した！`, 'log-battle');
+                player.kills++;
+                gainRuinsMaterial();
+            }
+        } else {
+            addLog('...風が吹き抜けるだけで、不気味なほど静かだ。', 'log-system');
+        }
+    }
+    
+    updateUI();
 }
 
-/* ヘッダー情報 */
-#status-header {
-    background: #111;
-    padding: 10px;
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 2px solid #f1c40f;
-    font-size: 13px;
-}
-#current-weapon { color: #3498db; font-weight: bold; }
-#player-atk, #kill-count { color: #f1c40f; font-weight: bold; }
-
-/* 素材バー */
-#inventory-bar {
-    background: #2c3e50;
-    padding: 8px 10px;
-    display: flex;
-    justify-content: space-around;
-    font-size: 12px;
-}
-#inventory-bar b { color: #2ecc71; margin-left: 3px; }
-
-/* タブ切り替え */
-.tab-container {
-    display: flex;
-    background: #111;
-}
-.tab-btn {
-    flex: 1;
-    background: #333;
-    color: #aaa;
-    border: none;
-    padding: 12px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-}
-.tab-btn.active {
-    background: #222;
-    color: #f1c40f;
-    border-bottom: 2px solid #f1c40f;
+// 遺跡のドロップ処理（100%素材、完成品ドロップはナシ）
+function gainRuinsMaterial() {
+    if (Math.random() > 0.5) {
+        inventory.iron += 1;
+        addLog(`💎 ドロップ: 【鉄鉱石】を1個拾った。`, 'log-get');
+    } else {
+        inventory.bone += 1;
+        addLog(`💎 ドロップ: 【魔物の骨】を1個拾った。`, 'log-get');
+    }
 }
 
-/* メインコンテンツ */
-#main-content {
-    flex: 1;
-    padding: 15px;
-    overflow-y: auto;
-}
-.content-panel { display: none; }
-.content-panel.active { display: block; }
-
-/* 手動探索ボタン */
-.action-btn {
-    width: 100%;
-    padding: 18px;
-    background: #e67e22;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
-    box-shadow: 0 4px #d35400;
-    cursor: pointer;
-}
-.action-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px #d35400;
+// 鍛冶屋での武器クラフト
+function craftWeapon(type) {
+    if (type === 'bronze' && inventory.copper >= 3) {
+        inventory.copper -= 3;
+        player.weapon = 'ブロンズソード';
+        player.atk = 25;
+        addLog(`🔨 【鍛冶成功】 銅鉱石を極限まで叩き、新たな武器『ブロンズソード』を鍛造した！`, 'log-craft');
+    } else if (type === 'iron' && inventory.iron >= 5 && inventory.bone >= 2) {
+        inventory.iron -= 5;
+        inventory.bone -= 2;
+        player.weapon = 'アイアンエッジ';
+        player.atk = 50;
+        addLog(`🔨 【鍛冶成功】 鉄の刃に魔物の骨を組み込み、凶悪な『アイアンエッジ』を鍛造した！`, 'log-craft');
+    }
+    updateUI();
 }
 
-/* 鍛冶屋レシピ */
-.recipe-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-.recipe-card {
-    background: #2d2d2d;
-    border: 1px solid #444;
-    border-radius: 6px;
-    padding: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.recipe-info { display: flex; flex-direction: column; gap: 3px; }
-.recipe-info strong { color: #fff; }
-.recipe-effect { font-size: 12px; color: #3498db; }
-.recipe-cost { font-size: 11px; color: #e74c3c; }
+// 画面の数値を最新の状態にする
+function updateUI() {
+    // 素材
+    document.getElementById('mat-copper').innerText = inventory.copper;
+    document.getElementById('mat-iron').innerText = inventory.iron;
+    document.getElementById('mat-bone').innerText = inventory.bone;
+    
+    // ステータス
+    document.getElementById('current-weapon').innerText = player.weapon;
+    document.getElementById('player-atk').innerText = player.atk;
+    document.getElementById('kill-count').innerText = player.kills;
 
-.craft-btn {
-    padding: 10px 20px;
-    background: #2ecc71;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-weight: bold;
-    cursor: pointer;
+    // 鍛冶ボタンの活性・非活性
+    document.getElementById('btn-craft-bronze').disabled = inventory.copper < 3;
+    document.getElementById('btn-craft-iron').disabled = (inventory.iron < 5 || inventory.bone < 2);
 }
-.craft-btn:disabled { background: #555; color: #888; cursor: not-allowed; }
 
-/* テキストログエリア */
-#log-container {
-    height: 180px;
-    background: #000;
-    border-top: 2px solid #333;
-    padding: 10px;
-    overflow-y: auto;
-}
-#game-log div {
-    margin-bottom: 6px;
-    line-height: 1.4;
-    animation: fadeIn 0.2s ease-out;
-}
-.log-system { color: #888; }
-.log-explore { color: #9b59b6; }
-.log-battle { color: #e74c3c; }
-.log-get { color: #2ecc71; font-weight: bold; }
-.log-craft { color: #f1c40f; font-weight: bold; }
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(2px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+// 初回起動時のUI同期
+updateUI();
