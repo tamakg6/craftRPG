@@ -2,68 +2,76 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>理想のログクラフトRPG</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>放置型テキストRPGプロトタイプ</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div id="game-container">
-    <header id="status-header">
-        <div class="status-item">武器: <span id="current-weapon">ボロい剣</span> (ATK: <span id="player-atk">10</span>)</div>
-        <div class="status-item">討伐: <span id="kill-count">0</span></div>
+    <header id="global-header">
+        <div class="dungeon-info">
+            <span id="current-dungeon-name">街に滞在中</span>
+            <span class="reservation-badge">予約可</span>
+        </div>
+        <div class="return-time">帰還時刻: <span id="return-time-text">--:--</span></div>
+        <div class="progress-container">
+            <div id="progress-bar" style="width: 0%;"></div>
+            <span id="progress-text">待機中...</span>
+        </div>
+        <div class="header-buttons">
+            <button id="btn-abort" disabled>途中帰還</button>
+            <button id="btn-loot">戦利品</button>
+        </div>
     </header>
 
-    <div id="inventory-bar">
-        <span>銅鉱石:<b id="mat-copper">0</b></span>
-        <span>鉄鉱石:<b id="mat-iron">0</b></span>
-        <span>魔物の骨:<b id="mat-bone">0</b></span>
-    </div>
-
-    <div class="tab-container">
-        <button id="tab-dungeon" class="tab-btn active" onclick="switchTab('dungeon')">ダンジョン探索</button>
-        <button id="tab-forge" class="tab-btn" onclick="switchTab('forge')">街の鍛冶屋</button>
-    </div>
-
     <main id="main-content">
-        <div id="panel-dungeon" class="content-panel active">
-            <div class="dungeon-select">
-                <p>探索するエリアを選択してください：</p>
-                <button class="action-btn" onclick="explore('cave')">薄暗い洞窟を探索 (手動)</button>
-                <button class="action-btn" onclick="explore('ruins')" style="margin-top: 10px; background: #9b59b6;">古びた遺跡を探索 (手動)</button>
-            </div>
-        </div>
+        <section id="view-log" class="content-view active">
+            <div class="section-title">📖 探索の記録</div>
+            <div id="log-list">
+                </div>
+        </section>
 
-        <div id="panel-forge" class="content-panel">
-            <p>集めた素材で武器を鍛造します（ガチャ・直ドロなし）：</p>
-            <div class="recipe-list">
-                <div class="recipe-card">
-                    <div class="recipe-info">
-                        <strong>ブロンズソード</strong>
-                        <span class="recipe-effect">攻撃力 10 → 25</span>
-                        <span class="recipe-cost">必要: 銅鉱石×3</span>
-                    </div>
-                    <button id="btn-craft-bronze" class="craft-btn" onclick="craftWeapon('bronze')">鍛造</button>
-                </div>
-                <div class="recipe-card">
-                    <div class="recipe-info">
-                        <strong>アイアンエッジ</strong>
-                        <span class="recipe-effect">攻撃力 10 → 50</span>
-                        <span class="recipe-cost">必要: 鉄鉱石×5, 骨×2</span>
-                    </div>
-                    <button id="btn-craft-iron" class="craft-btn" onclick="craftWeapon('iron')">鍛造</button>
-                </div>
-            </div>
-        </div>
+        <section id="view-dungeon" class="content-view">
+            <div class="section-title">🧭 ダンジョン選択</div>
+            <p>瘴気濃度を選択して出発する画面（開発中）</p>
+            <button id="btn-start-expedition" class="action-btn">「はじめての草むら」へ出発する</button>
+        </section>
+        <section id="view-smith" class="content-view"><div class="section-title">🛠️ 鍛冶屋</div><p>素材から装備をクラフト・厳選（開発中）</p></section>
+        <section id="view-collection" class="content-view"><div class="section-title">🔬 アイテム図鑑</div><p>装備を解析して限界突破効果を解放（開発中）</p></section>
+        <section id="view-item" class="content-view"><div class="section-title">🎒 アイテム</div><p>所持装備の確認・変更（開発中）</p></section>
+        <section id="view-status" class="content-view"><div class="section-title">🧍 ステータス</div><p>Lv1 / LvUP / Boostのステータス詳細（開発中）</p></section>
     </main>
 
-    <div id="log-container">
-        <div id="game-log">
-            <div class="log-system">ゲームが開始されました。素材を集めて強力な武器を作りましょう。</div>
+    <div id="detail-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div id="modal-title" class="modal-header">13:52 フェアリーを倒した</div>
+            <div id="modal-body" class="modal-body-list">
+                </div>
+            <button id="btn-close-modal" class="close-btn">閉じる</button>
         </div>
     </div>
-</div>
 
-<script src="game.js"></script>
+    <nav id="bottom-nav">
+        <button class="nav-item" data-target="view-dungeon">
+            <span class="icon">←</span><span class="label">DUNGEON</span>
+        </button>
+        <button class="nav-item active" data-target="view-log">
+            <span class="icon">📖</span><span class="label">LOG</span>
+        </button>
+        <button class="nav-item" data-target="view-smith">
+            <span class="icon">🛠️</span><span class="label">SMITH</span>
+        </button>
+        <button class="nav-item" data-target="view-collection">
+            <span class="icon">🔬</span><span class="label">COLLECTION</span>
+        </button>
+        <button class="nav-item" data-target="view-item">
+            <span class="icon">🎒</span><span class="label">ITEM</span>
+        </button>
+        <button class="nav-item" data-target="view-status">
+            <span class="icon">🧍</span><span class="label">STATUS</span>
+        </button>
+    </nav>
+
+    <script src="game.js"></script>
 </body>
 </html>
