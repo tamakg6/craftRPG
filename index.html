@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>理想の素材クラフトRPG</title>
+    <!-- 外部CSSファイルの読み込み -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="game-container">
+    <!-- 描画画面 -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- ステータス画面 -->
+    <div id="status-panel" class="ui-panel">
+        <h3>プレイヤー情報</h3>
+        <div>装備中の武器: <span id="current-weapon">ボロい剣</span></div>
+        <div>攻撃力: <span id="player-atk">10</span></div>
+        <div class="kill-tracker">討伐数: <span id="kill-count">0</span></div>
+    </div>
+
+    <!-- 素材インベントリ -->
+    <div id="inventory-panel" class="ui-panel">
+        <h3>所持クラフト素材</h3>
+        <div class="material-line"><span>銅鉱石:</span> <span id="mat-copper">0</span></div>
+        <div class="material-line"><span>鉄鉱石:</span> <span id="mat-iron">0</span></div>
+        <div class="material-line"><span>魔物の骨:</span> <span id="mat-bone">0</span></div>
+    </div>
+
+    <!-- 操作説明 -->
+    <div id="controls-notice">
+        操作: 【マウス移動】で照準 / 【左クリック】で手動攻撃 / 【WASDキー】で移動
+    </div>
+
+    <!-- 鍛冶屋パネル（レシピ） -->
+    <div id="forge-panel" class="ui-panel">
+        <!-- レシピ1 -->
+        <div class="recipe-card">
+            <div>
+                <strong class="weapon-bronze">ブロンズソード</strong>
+                <div class="weapon-desc">攻撃力 +15</div>
+                <div class="req-materials">必要: 銅鉱石×3</div>
+            </div>
+            <button id="btn-craft-1" onclick="craftWeapon('bronze')">鍛造する</button>
+        </div>
+        <!-- レシピ2 -->
+        <div class="recipe-card">
+            <div>
+                <strong class="weapon-iron">アイアンエッジ</strong>
+                <div class="weapon-desc">攻撃力 +35</div>
+                <div class="req-materials">必要: 鉄鉱石×5, 骨×2</div>
+            </div>
+            <button id="btn-craft-2" onclick="craftWeapon('iron')">鍛造する</button>
+        </div>
+    </div>
+</div>
+
+<!-- 外部JavaScriptファイルの読み込み -->
+<script src="game.js"></script>
+</body>
+</html>
