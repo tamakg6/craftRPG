@@ -1,149 +1,2556 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>放置型クラフトRPG 完全版プロトタイプ</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>放置型クラフトRPG テストプレイ</title>
+<style>
+  :root {
+    --bg: #14151a;
+    --panel: #1e2027;
+    --panel2: #262833;
+    --border: #34363f;
+    --text: #e8e8ec;
+    --text-dim: #9a9ba5;
+    --accent: #7c6df0;
+    --accent-dim: #4a3fa0;
+    --danger: #e0556a;
+    --warn: #d8a73f;
+    --safe: #4caf7c;
+    --gold: #d8b34a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif;
+    font-size: 14px;
+    padding-bottom: 70px;
+  }
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 14px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .topbar .stat { font-size: 12px; color: var(--text-dim); }
+  .topbar .stat b { color: var(--gold); }
+  .screen { padding: 14px; max-width: 720px; margin: 0 auto; }
+  .hidden { display: none !important; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .card h3 { margin: 0 0 8px; font-size: 15px; font-weight: 600; }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .muted { color: var(--text-dim); font-size: 12px; }
+
+  button {
+    background: var(--accent-dim);
+    color: var(--text);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.secondary { background: var(--panel2); border: 1px solid var(--border); }
+  button.danger { background: #5a2230; }
+  button.small { padding: 4px 10px; font-size: 12px; }
+
+  .dungeon-list { display: flex; flex-direction: column; gap: 8px; }
+  .dungeon-item {
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px;
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer;
+  }
+  .dungeon-item:hover { border-color: var(--accent); }
+  .danger-label {
+    font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600;
+  }
+  .danger-safe { background: rgba(76,175,124,0.15); color: var(--safe); }
+  .danger-caution { background: rgba(216,167,63,0.15); color: var(--warn); }
+  .danger-danger { background: rgba(224,85,106,0.15); color: var(--danger); }
+  .danger-suicide { background: rgba(224,85,106,0.3); color: #ff7a8e; }
+
+  .log-entry {
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px; margin-bottom: 6px;
+    font-size: 12.5px; cursor: pointer;
+  }
+  .log-entry:hover { border-color: var(--accent); }
+  .log-entry .t { color: var(--text-dim); margin-right: 6px; }
+
+  .tabbar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--panel); border-top: 1px solid var(--border);
+    display: flex; z-index: 10;
+  }
+  .tabbar button {
+    flex: 1; background: none; border-radius: 0; padding: 10px 4px;
+    font-size: 11px; color: var(--text-dim); display: flex; flex-direction: column; gap: 2px; align-items: center;
+  }
+  .tabbar button.active { color: var(--accent); }
+
+  .item-card {
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+  }
+  .item-card.equipped { border-color: var(--accent); }
+  .item-name { font-weight: 600; color: #f0a85c; }
+  .ability-tag {
+    display: inline-block; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 6px; padding: 2px 8px; font-size: 11px; margin: 2px 4px 0 0; color: var(--text-dim);
+  }
+
+  .mat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: 8px; }
+  .mat-card {
+    background: var(--panel2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px; text-align: center; cursor: pointer; user-select: none;
+  }
+  .mat-card.selected { border-color: var(--accent); background: rgba(124,109,240,0.15); }
+  .mat-card .cnt { font-size: 11px; color: var(--text-dim); }
+  .mat-card .corrupt { font-size: 10px; color: var(--gold); }
+
+  .recipe-card {
+    background: var(--panel2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 12px; margin-bottom: 8px;
+  }
+  .recipe-card.craftable { border-color: var(--safe); }
+  .recipe-need { font-size: 11px; color: var(--text-dim); }
+  .recipe-need.ok { color: var(--safe); }
+  .recipe-need.lack { color: var(--danger); }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center; z-index: 50; padding: 16px;
+  }
+  .modal {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; max-width: 480px; width: 100%; max-height: 80vh; overflow-y: auto;
+  }
+  .stat-table { width: 100%; font-size: 12.5px; border-collapse: collapse; }
+  .stat-table th, .stat-table td { padding: 4px 6px; text-align: right; border-bottom: 1px solid var(--border); }
+  .stat-table th:first-child, .stat-table td:first-child { text-align: left; }
+
+  .progress-bar-bg { background: var(--panel2); border-radius: 20px; height: 10px; overflow: hidden; }
+  .progress-bar-fill { background: var(--accent); height: 100%; }
+
+  select, .equip-select {
+    background: var(--panel2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 8px; font-size: 12.5px;
+  }
+</style>
 </head>
 <body>
 
-    <header id="global-header">
-        <div class="dungeon-info">
-            <span id="current-dungeon-name">街に滞在中</span>
-            <span class="reservation-badge">予約可</span>
-        </div>
-        <div class="return-time">帰還時刻: <span id="return-time-text">--:--</span></div>
-        <div class="progress-container">
-            <div id="progress-bar" style="width: 0%;"></div>
-            <span id="progress-text">待機中...</span>
-        </div>
-        <div class="header-buttons">
-            <button id="btn-abort" disabled>途中帰還</button>
-            <button id="btn-loot">戦利品</button>
-        </div>
-    </header>
+<div class="topbar">
+  <div>
+    <div style="font-weight:600;">たま</div>
+    <div class="stat">瘴気度 <b id="topWorldLevel">0</b></div>
+  </div>
+  <div style="text-align:right;">
+    <div class="stat">強さレーティング</div>
+    <div style="font-weight:600; color: var(--gold);" id="topRating">0</div>
+  </div>
+</div>
 
-    <main id="main-content">
-        
-        <section id="view-dungeon" class="content-view active">
-            <div class="section-title">🧭 ダンジョン選択</div>
-            <div class="dungeon-select-card">
-                <h3>はじめての草むら (瘴気濃度 0)</h3>
-                <p>ドロップ傾向：スライムの粘液（耐久、体力の鍛錬）</p>
-                <button class="action-btn start-dungeon-btn" data-dungeon="草むら" data-miasma="0">探索開始</button>
-            </div>
-            <div class="dungeon-select-card">
-                <h3>勇気の峡谷 (瘴気濃度 1)</h3>
-                <p>ドロップ傾向：錆びた鉄くず（頑丈、守りの鍛錬、腕力）</p>
-                <button class="action-btn start-dungeon-btn" data-dungeon="勇気の峡谷" data-miasma="1">探索開始</button>
-            </div>
-            <div class="dungeon-select-card">
-                <h3>終わりの魔王城 (瘴気濃度 5)</h3>
-                <p>ドロップ傾向：魔獣の皮・コア素材（全能力高Lv、超侵食）</p>
-                <button class="action-btn start-dungeon-btn" data-dungeon="魔王城" data-miasma="5">探索開始</button>
-            </div>
-        </section>
-
-        <section id="view-log" class="content-view">
-            <div class="section-title">📖 探索の記録</div>
-            <div id="log-list"></div>
-        </section>
-
-        <section id="view-smith" class="content-view">
-            <div class="section-title">🛠️ 鍛冶屋クラフト</div>
-            <div class="smith-container">
-                <div class="recipe-card">
-                    <h4>木の棒 / こん棒 (武器)</h4>
-                    <p>必要素材: スライムの粘液 x2</p>
-                    <button class="craft-btn" data-type="weapon" data-recipe="こん棒">クラフト実行</button>
-                </div>
-                <div class="recipe-card">
-                    <h4>堅木の盾 (防具)</h4>
-                    <p>必要素材: 錆びた鉄くず x2</p>
-                    <button class="craft-btn" data-type="armor" data-recipe="堅木の盾">クラフト実行</button>
-                </div>
-                <div class="recipe-card">
-                    <h4>銅の指輪 (アクセサリー)</h4>
-                    <p>必要素材: スライムの粘液 x1, 錆びた鉄くず x1</p>
-                    <button class="craft-btn" data-type="accessory" data-recipe="銅の指輪">クラフト実行</button>
-                </div>
-            </div>
-        </section>
-
-        <section id="view-collection" class="content-view">
-            <div class="section-title">🔬 アイテム図鑑と解析</div>
-            <div id="collection-list"></div>
-        </section>
-
-        <section id="view-item" class="content-view">
-            <div class="section-title">🎒 バッグ・装備一覧</div>
-            <div class="item-tab-headers">
-                <button class="item-filter-btn active" data-filter="all">全て</button>
-                <button class="item-filter-btn" data-filter="weapon">⚔️</button>
-                <button class="item-filter-btn" data-filter="armor">🛡️</button>
-                <button class="item-filter-btn" data-filter="accessory">💍</button>
-            </div>
-            <div id="inventory-list"></div>
-        </section>
-
-        <section id="view-status" class="content-view">
-            <div class="section-title">🧍 プレイヤーつよさ</div>
-            <div class="status-player-card">
-                <div class="status-avatar">たま</div>
-                <div class="status-rating">強さレーティング: <span id="status-rating-val">0</span></div>
-            </div>
-            
-            <h3>現在の装備品</h3>
-            <div class="equipped-summary-box">
-                <div>武器: <span id="eq-weapon-name">未装備</span></div>
-                <div>防具: <span id="eq-armor-name">未装備</span></div>
-                <div>指輪: <span id="eq-accessory-name">未装備</span></div>
-            </div>
-
-            <h3>詳細パラメーター</h3>
-            <table class="status-table">
-                <thead>
-                    <tr><th>ステータス</th><th>Lv1</th><th>LvUP</th><th>Boost</th></tr>
-                </thead>
-                <tbody id="status-table-body">
-                    </tbody>
-            </table>
-
-            <h3>装備アビリティ詳細</h3>
-            <div id="ability-detail-list" class="ability-detail-box"></div>
-        </section>
-    </main>
-
-    <div id="detail-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <div id="modal-title" class="modal-header">戦闘詳細</div>
-            <div id="modal-body" class="modal-body-list"></div>
-            <button id="btn-close-modal" class="close-btn">閉じる</button>
-        </div>
+<div class="screen" id="screen-dungeon">
+  <div class="card">
+    <h3>ダンジョンを選択</h3>
+    <div class="dungeon-list" id="dungeonList"></div>
+  </div>
+  <div class="card hidden" id="explorePanel">
+    <h3 id="exploreDungeonName"></h3>
+    <div class="progress-bar-bg" style="margin-bottom:8px;">
+      <div class="progress-bar-fill" id="exploreProgress" style="width:0%;"></div>
     </div>
+    <div class="row" style="margin-bottom:8px;">
+      <span class="muted" id="exploreStatus">準備中</span>
+      <span class="muted" id="exploreFloor"></span>
+    </div>
+    <div class="row">
+      <button class="secondary small" id="btnRetreat">途中帰還</button>
+      <button class="small" id="btnNextStep">次のターンへ進む</button>
+    </div>
+  </div>
+  <div class="card hidden" id="logPanel">
+    <h3>探索の記録</h3>
+    <div id="logList"></div>
+  </div>
+</div>
 
-    <nav id="bottom-nav">
-        <button class="nav-item active" data-target="view-dungeon">
-            <span class="icon">←</span><span class="label">DUNGEON</span>
-        </button>
-        <button class="nav-item" data-target="view-log">
-            <span class="icon">📖</span><span class="label">LOG</span>
-        </button>
-        <button class="nav-item" data-target="view-smith">
-            <span class="icon">🛠️</span><span class="label">SMITH</span>
-        </button>
-        <button class="nav-item" data-target="view-collection">
-            <span class="icon">🔬</span><span class="label">COLLECTION</span>
-        </button>
-        <button class="nav-item" data-target="view-item">
-            <span class="icon">🎒</span><span class="label">ITEM</span>
-        </button>
-        <button class="nav-item" data-target="view-status">
-            <span class="icon">🧍</span><span class="label">STATUS</span>
-        </button>
-    </nav>
+<div class="screen hidden" id="screen-smith">
+  <div class="card">
+    <h3>クラフト</h3>
+    <p class="muted">作りたい装備をタップしてレシピを確認</p>
+    <div class="row" style="margin-bottom:8px; gap:4px;">
+      <select id="smithCategory" style="flex:1;">
+        <option value="weapon">武器</option>
+        <option value="armor">防具</option>
+        <option value="accessory">アクセサリー</option>
+      </select>
+    </div>
+    <div id="recipeList"></div>
+  </div>
+</div>
 
-    <script src="game.js"></script>
+<div class="screen hidden" id="screen-item">
+  <div class="card">
+    <h3>所持装備</h3>
+    <div id="itemList"></div>
+  </div>
+  <div class="card">
+    <h3>所持素材</h3>
+    <div class="mat-grid" id="materialGrid"></div>
+  </div>
+</div>
+
+<div class="screen hidden" id="screen-status">
+  <div class="card">
+    <h3>つよさ</h3>
+    <table class="stat-table" id="statusTable"></table>
+  </div>
+  <div class="card">
+    <h3>現在の装備</h3>
+    <div id="equippedList"></div>
+  </div>
+  <div class="card">
+    <h3>侵食度ブースト</h3>
+    <p class="muted" id="corruptionInfo"></p>
+  </div>
+</div>
+
+<div class="screen hidden" id="screen-collection">
+  <div class="card">
+    <h3>図鑑・解析</h3>
+    <p class="muted">解析Lvを上げると限界突破効果のロックが解除されます（テスト版は簡易表示）</p>
+    <div class="row" style="margin-bottom:8px;">
+      <span>図鑑の解析Lv</span>
+      <b id="analysisLevelDisplay">1</b>
+    </div>
+    <button class="small" id="btnAnalyze">解析する（テスト用：Lv+1）</button>
+  </div>
+  <div class="card">
+    <h3>限界突破ライン</h3>
+    <div id="breakthroughList"></div>
+  </div>
+</div>
+
+<div class="tabbar">
+  <button class="tab-btn active" data-screen="dungeon"><span>⛰</span>DUNGEON</button>
+  <button class="tab-btn" data-screen="smith"><span>⚒</span>SMITH</button>
+  <button class="tab-btn" data-screen="collection"><span>📖</span>COLLECTION</button>
+  <button class="tab-btn" data-screen="item"><span>🎒</span>ITEM</button>
+  <button class="tab-btn" data-screen="status"><span>👤</span>STATUS</button>
+</div>
+
+<div id="modalRoot"></div>
+
+<script id="game-data" type="application/json">
+{
+  "dungeons": [
+    {
+      "id": 1,
+      "name": "はじめの草むら",
+      "theme": "草原・入門"
+    },
+    {
+      "id": 2,
+      "name": "湿った沼地",
+      "theme": "沼・毒・カエル系"
+    },
+    {
+      "id": 3,
+      "name": "迷いの森",
+      "theme": "森・霧・妖精"
+    },
+    {
+      "id": 4,
+      "name": "古びた採掘場",
+      "theme": "採掘跡・初級鉱物"
+    },
+    {
+      "id": 5,
+      "name": "深い洞窟",
+      "theme": "洞窟・鉱物"
+    },
+    {
+      "id": 6,
+      "name": "忘却の墓地",
+      "theme": "墓地・低級霊体"
+    },
+    {
+      "id": 7,
+      "name": "濃霧の古戦場",
+      "theme": "廃墟・霊・残された武具"
+    },
+    {
+      "id": 8,
+      "name": "終わりの魔城",
+      "theme": "魔城・最終決戦"
+    }
+  ],
+  "materials": [
+    {
+      "id": "M01",
+      "name": "くさむらの葉",
+      "dungeon": 1,
+      "type": "植物系",
+      "weights": [
+        "耐久",
+        "機敏",
+        "体力の鍛錬"
+      ]
+    },
+    {
+      "id": "M02",
+      "name": "弱った虫の殻",
+      "dungeon": 1,
+      "type": "小生物系",
+      "weights": [
+        "機敏",
+        "幸運",
+        "耐久"
+      ]
+    },
+    {
+      "id": "M03",
+      "name": "丸い石ころ",
+      "dungeon": 1,
+      "type": "鉱物系(弱)",
+      "weights": [
+        "頑丈",
+        "腕力",
+        "守りの鍛錬"
+      ]
+    },
+    {
+      "id": "M04",
+      "name": "毒カエルの皮",
+      "dungeon": 2,
+      "type": "毒生物系",
+      "weights": [
+        "耐久",
+        "機敏",
+        "体力の鍛錬"
+      ]
+    },
+    {
+      "id": "M05",
+      "name": "ぬめる粘液",
+      "dungeon": 2,
+      "type": "粘液系",
+      "weights": [
+        "幸運",
+        "機敏",
+        "耐久"
+      ]
+    },
+    {
+      "id": "M06",
+      "name": "フェアリーの粉",
+      "dungeon": 3,
+      "type": "妖精系",
+      "weights": [
+        "幸運",
+        "機敏",
+        "体力の鍛錬"
+      ]
+    },
+    {
+      "id": "M07",
+      "name": "古木の枝",
+      "dungeon": 3,
+      "type": "植物系",
+      "weights": [
+        "頑丈",
+        "守りの鍛錬",
+        "耐久"
+      ]
+    },
+    {
+      "id": "M08",
+      "name": "森狼の牙",
+      "dungeon": 3,
+      "type": "獣系",
+      "weights": [
+        "腕力",
+        "機敏",
+        "力の鍛錬"
+      ]
+    },
+    {
+      "id": "M09",
+      "name": "くすんだ鉄片",
+      "dungeon": 4,
+      "type": "鉱物系(中)",
+      "weights": [
+        "頑丈",
+        "腕力",
+        "守りの鍛錬"
+      ]
+    },
+    {
+      "id": "M10",
+      "name": "採掘者の手袋",
+      "dungeon": 4,
+      "type": "道具系",
+      "weights": [
+        "腕力",
+        "耐久",
+        "力の鍛錬"
+      ]
+    },
+    {
+      "id": "M11",
+      "name": "錆びた鉄くず",
+      "dungeon": 5,
+      "type": "鉱物系",
+      "weights": [
+        "頑丈",
+        "守りの鍛錬",
+        "腕力"
+      ]
+    },
+    {
+      "id": "M12",
+      "name": "洞窟蝙蝠の翼膜",
+      "dungeon": 5,
+      "type": "洞窟生物系",
+      "weights": [
+        "機敏",
+        "耐久",
+        "幸運"
+      ]
+    },
+    {
+      "id": "M13",
+      "name": "光る鉱石",
+      "dungeon": 5,
+      "type": "鉱物系",
+      "weights": [
+        "幸運",
+        "頑丈",
+        "力の鍛錬"
+      ]
+    },
+    {
+      "id": "M14",
+      "name": "古びた墓石の欠片",
+      "dungeon": 6,
+      "type": "霊体系(弱)",
+      "weights": [
+        "頑丈",
+        "守りの鍛錬",
+        "耐久"
+      ]
+    },
+    {
+      "id": "M15",
+      "name": "弱い地縛霊の影",
+      "dungeon": 6,
+      "type": "霊体系(弱)",
+      "weights": [
+        "幸運",
+        "機敏",
+        "力の鍛錬"
+      ]
+    },
+    {
+      "id": "M16",
+      "name": "朽ちた鎧の破片",
+      "dungeon": 7,
+      "type": "金属系",
+      "weights": [
+        "頑丈",
+        "守りの鍛錬",
+        "耐久"
+      ]
+    },
+    {
+      "id": "M17",
+      "name": "彷徨う魂の残滓",
+      "dungeon": 7,
+      "type": "霊体系",
+      "weights": [
+        "幸運",
+        "機敏",
+        "力の鍛錬"
+      ]
+    },
+    {
+      "id": "M18",
+      "name": "古戦士の骨",
+      "dungeon": 7,
+      "type": "霊体系",
+      "weights": [
+        "腕力",
+        "耐久",
+        "守りの鍛錬"
+      ]
+    },
+    {
+      "id": "M19",
+      "name": "魔獣の牙",
+      "dungeon": 8,
+      "type": "魔物系",
+      "weights": [
+        "腕力",
+        "力の鍛錬",
+        "耐久"
+      ]
+    },
+    {
+      "id": "M20",
+      "name": "闇の結晶",
+      "dungeon": 8,
+      "type": "魔物系",
+      "weights": [
+        "幸運",
+        "頑丈",
+        "守りの鍛錬"
+      ]
+    },
+    {
+      "id": "M21",
+      "name": "魔王の鱗片",
+      "dungeon": 8,
+      "type": "魔物系(最上級)",
+      "weights": [
+        "腕力",
+        "頑丈",
+        "幸運"
+      ]
+    }
+  ],
+  "rareMaterials": [
+    {
+      "id": "R01",
+      "name": "四つ葉のクローバー",
+      "dungeon": 1,
+      "type": "幸運系(超レア)",
+      "weights": [
+        "幸運"
+      ]
+    },
+    {
+      "id": "R02",
+      "name": "虹色の毒鱗",
+      "dungeon": 2,
+      "type": "毒生物系(レア)",
+      "weights": [
+        "耐久",
+        "機敏"
+      ]
+    },
+    {
+      "id": "R03",
+      "name": "大妖精の鱗粉",
+      "dungeon": 3,
+      "type": "妖精系(レア)",
+      "weights": [
+        "幸運",
+        "体力の鍛錬"
+      ]
+    },
+    {
+      "id": "R04",
+      "name": "輝く原石",
+      "dungeon": 4,
+      "type": "鉱物系(レア)",
+      "weights": [
+        "頑丈",
+        "力の鍛錬"
+      ]
+    },
+    {
+      "id": "R05",
+      "name": "洞窟の守護結晶",
+      "dungeon": 5,
+      "type": "鉱物系(レア)",
+      "weights": [
+        "頑丈",
+        "幸運",
+        "守りの鍛錬"
+      ]
+    },
+    {
+      "id": "R06",
+      "name": "上位霊の残光",
+      "dungeon": 6,
+      "type": "霊体系(レア)",
+      "weights": [
+        "幸運",
+        "力の鍛錬"
+      ]
+    },
+    {
+      "id": "R07",
+      "name": "名将の遺品",
+      "dungeon": 7,
+      "type": "金属系(レア)",
+      "weights": [
+        "腕力",
+        "頑丈",
+        "守りの鍛錬"
+      ]
+    },
+    {
+      "id": "R08",
+      "name": "魔王の心臓",
+      "dungeon": 8,
+      "type": "魔物系(超レア)",
+      "weights": [
+        "腕力",
+        "頑丈",
+        "幸運",
+        "機敏",
+        "耐久"
+      ]
+    }
+  ],
+  "weapons": [
+    {
+      "id": "W01",
+      "name": "木の棒",
+      "dungeon": 1,
+      "atk": 5,
+      "evolvesTo": "W04",
+      "recipe": [
+        [
+          "M01",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "W02",
+      "name": "ちびナイフ",
+      "dungeon": 1,
+      "atk": 7,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M02",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "W15",
+      "name": "毒の短槍",
+      "dungeon": 2,
+      "atk": 14,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M04",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "W16",
+      "name": "ぬめりこん棒",
+      "dungeon": 2,
+      "atk": 13,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M05",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "W03",
+      "name": "フェアリーソード",
+      "dungeon": 3,
+      "atk": 12,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M06",
+          2
+        ],
+        [
+          "M07",
+          1
+        ]
+      ]
+    },
+    {
+      "id": "W04",
+      "name": "こん棒",
+      "dungeon": 3,
+      "atk": 18,
+      "evolvesTo": "W09",
+      "recipe": [
+        [
+          "W01",
+          1
+        ],
+        [
+          "M07",
+          2
+        ]
+      ]
+    },
+    {
+      "id": "W05",
+      "name": "森狼の爪剣",
+      "dungeon": 3,
+      "atk": 16,
+      "evolvesTo": "W08",
+      "recipe": [
+        [
+          "M08",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "W17",
+      "name": "つるはし",
+      "dungeon": 4,
+      "atk": 26,
+      "evolvesTo": "W09",
+      "recipe": [
+        [
+          "M09",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "W18",
+      "name": "採掘者のピック",
+      "dungeon": 4,
+      "atk": 24,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M09",
+          2
+        ],
+        [
+          "M10",
+          1
+        ]
+      ]
+    },
+    {
+      "id": "W06",
+      "name": "ワスプナイフ",
+      "dungeon": 5,
+      "atk": 22,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M12",
+          2
+        ],
+        [
+          "M13",
+          1
+        ]
+      ]
+    },
+    {
+      "id": "W07",
+      "name": "スタンナックル",
+      "dungeon": 5,
+      "atk": 25,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M11",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "W08",
+      "name": "ロングソード",
+      "dungeon": 5,
+      "atk": 30,
+      "evolvesTo": "W13",
+      "recipe": [
+        [
+          "W05",
+          1
+        ],
+        [
+          "M11",
+          2
+        ]
+      ]
+    },
+    {
+      "id": "W19",
+      "name": "朽ちた骸刀",
+      "dungeon": 6,
+      "atk": 33,
+      "evolvesTo": "W11",
+      "recipe": [
+        [
+          "M14",
+          2
+        ],
+        [
+          "M15",
+          1
+        ]
+      ]
+    },
+    {
+      "id": "W20",
+      "name": "墓守の槌",
+      "dungeon": 6,
+      "atk": 35,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M14",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "W09",
+      "name": "鉄塊",
+      "dungeon": 7,
+      "atk": 40,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "W04",
+          1
+        ],
+        [
+          "M16",
+          2
+        ]
+      ]
+    },
+    {
+      "id": "W10",
+      "name": "バトルサイス",
+      "dungeon": 7,
+      "atk": 42,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M18",
+          2
+        ],
+        [
+          "M16",
+          1
+        ]
+      ]
+    },
+    {
+      "id": "W11",
+      "name": "装飾刀",
+      "dungeon": 7,
+      "atk": 38,
+      "evolvesTo": "W14",
+      "recipe": [
+        [
+          "M17",
+          2
+        ],
+        [
+          "M18",
+          1
+        ]
+      ]
+    },
+    {
+      "id": "W12",
+      "name": "タツマキ",
+      "dungeon": 8,
+      "atk": 55,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M19",
+          2
+        ],
+        [
+          "M20",
+          1
+        ]
+      ]
+    },
+    {
+      "id": "W13",
+      "name": "聖剣",
+      "dungeon": 8,
+      "atk": 70,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "W08",
+          1
+        ],
+        [
+          "M21",
+          2
+        ]
+      ]
+    },
+    {
+      "id": "W14",
+      "name": "サラマンダー",
+      "dungeon": 8,
+      "atk": 65,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "W11",
+          1
+        ],
+        [
+          "M19",
+          2
+        ]
+      ]
+    }
+  ],
+  "rareWeapons": [
+    {
+      "id": "RW01",
+      "name": "幸運の杖",
+      "dungeon": 1,
+      "atk": 10,
+      "recipe": [
+        [
+          "R01",
+          1
+        ],
+        [
+          "M01",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "幸運"
+      ]
+    },
+    {
+      "id": "RW02",
+      "name": "毒鱗の短剣",
+      "dungeon": 2,
+      "atk": 20,
+      "recipe": [
+        [
+          "R02",
+          1
+        ],
+        [
+          "M04",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "耐久",
+        "体力の鍛錬"
+      ]
+    },
+    {
+      "id": "RW03",
+      "name": "大妖精の杖",
+      "dungeon": 3,
+      "atk": 24,
+      "recipe": [
+        [
+          "R03",
+          1
+        ],
+        [
+          "M06",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "幸運",
+        "体力の鍛錬"
+      ]
+    },
+    {
+      "id": "RW04",
+      "name": "輝石の鎚",
+      "dungeon": 4,
+      "atk": 34,
+      "recipe": [
+        [
+          "R04",
+          1
+        ],
+        [
+          "M09",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "頑丈",
+        "力の鍛錬"
+      ]
+    },
+    {
+      "id": "RW05",
+      "name": "守護結晶の剣",
+      "dungeon": 5,
+      "atk": 38,
+      "recipe": [
+        [
+          "R05",
+          1
+        ],
+        [
+          "M13",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "頑丈",
+        "幸運",
+        "守りの鍛錬"
+      ]
+    },
+    {
+      "id": "RW06",
+      "name": "残光の刃",
+      "dungeon": 6,
+      "atk": 45,
+      "recipe": [
+        [
+          "R06",
+          1
+        ],
+        [
+          "M15",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "幸運",
+        "力の鍛錬"
+      ]
+    },
+    {
+      "id": "RW07",
+      "name": "名将の剣",
+      "dungeon": 7,
+      "atk": 50,
+      "recipe": [
+        [
+          "R07",
+          1
+        ],
+        [
+          "M18",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "腕力",
+        "頑丈",
+        "守りの鍛錬"
+      ]
+    },
+    {
+      "id": "RW08",
+      "name": "魔王の心臓剣",
+      "dungeon": 8,
+      "atk": 90,
+      "recipe": [
+        [
+          "R08",
+          1
+        ],
+        [
+          "M21",
+          3
+        ]
+      ],
+      "guaranteed": [
+        "腕力",
+        "頑丈",
+        "幸運",
+        "機敏",
+        "耐久"
+      ]
+    }
+  ],
+  "armors": [
+    {
+      "id": "A01",
+      "name": "布の服",
+      "dungeon": 1,
+      "def": 4,
+      "evolvesTo": "A03",
+      "recipe": [
+        [
+          "M01",
+          2
+        ]
+      ]
+    },
+    {
+      "id": "A02",
+      "name": "木の盾",
+      "dungeon": 1,
+      "def": 6,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M03",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "A10",
+      "name": "毒耐性の皮鎧",
+      "dungeon": 2,
+      "def": 10,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M04",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "A03",
+      "name": "革の鎧",
+      "dungeon": 3,
+      "def": 12,
+      "evolvesTo": "A05",
+      "recipe": [
+        [
+          "A01",
+          1
+        ],
+        [
+          "M08",
+          2
+        ]
+      ]
+    },
+    {
+      "id": "A04",
+      "name": "堅木の盾",
+      "dungeon": 3,
+      "def": 14,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M07",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "A11",
+      "name": "採掘者の作業着",
+      "dungeon": 4,
+      "def": 16,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M09",
+          2
+        ],
+        [
+          "M10",
+          1
+        ]
+      ]
+    },
+    {
+      "id": "A05",
+      "name": "鎖帷子",
+      "dungeon": 5,
+      "def": 22,
+      "evolvesTo": "A07",
+      "recipe": [
+        [
+          "A03",
+          1
+        ],
+        [
+          "M11",
+          2
+        ]
+      ]
+    },
+    {
+      "id": "A06",
+      "name": "洞窟蝙蝠のマント",
+      "dungeon": 5,
+      "def": 20,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M12",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "A12",
+      "name": "墓守のローブ",
+      "dungeon": 6,
+      "def": 24,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M14",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "A13",
+      "name": "骨の鎧",
+      "dungeon": 6,
+      "def": 26,
+      "evolvesTo": "A07",
+      "recipe": [
+        [
+          "M15",
+          2
+        ],
+        [
+          "M14",
+          1
+        ]
+      ]
+    },
+    {
+      "id": "A07",
+      "name": "鉄の鎧",
+      "dungeon": 7,
+      "def": 35,
+      "evolvesTo": "A09",
+      "recipe": [
+        [
+          "A05",
+          1
+        ],
+        [
+          "M16",
+          2
+        ]
+      ]
+    },
+    {
+      "id": "A08",
+      "name": "残骸の大盾",
+      "dungeon": 7,
+      "def": 38,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M18",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "A09",
+      "name": "竜鱗の鎧",
+      "dungeon": 8,
+      "def": 55,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "A07",
+          1
+        ],
+        [
+          "M21",
+          2
+        ]
+      ]
+    }
+  ],
+  "rareArmors": [
+    {
+      "id": "RA01",
+      "name": "幸運のマント",
+      "dungeon": 1,
+      "def": 5,
+      "recipe": [
+        [
+          "R01",
+          1
+        ],
+        [
+          "M02",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "幸運"
+      ]
+    },
+    {
+      "id": "RA02",
+      "name": "虹鱗の鎧",
+      "dungeon": 2,
+      "def": 14,
+      "recipe": [
+        [
+          "R02",
+          1
+        ],
+        [
+          "M05",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "耐久",
+        "体力の鍛錬"
+      ]
+    },
+    {
+      "id": "RA03",
+      "name": "大妖精のドレス",
+      "dungeon": 3,
+      "def": 18,
+      "recipe": [
+        [
+          "R03",
+          1
+        ],
+        [
+          "M07",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "幸運",
+        "体力の鍛錬"
+      ]
+    },
+    {
+      "id": "RA04",
+      "name": "輝石の鎧",
+      "dungeon": 4,
+      "def": 26,
+      "recipe": [
+        [
+          "R04",
+          1
+        ],
+        [
+          "M10",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "頑丈",
+        "力の鍛錬"
+      ]
+    },
+    {
+      "id": "RA05",
+      "name": "守護結晶の鎧",
+      "dungeon": 5,
+      "def": 30,
+      "recipe": [
+        [
+          "R05",
+          1
+        ],
+        [
+          "M11",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "頑丈",
+        "幸運",
+        "守りの鍛錬"
+      ]
+    },
+    {
+      "id": "RA06",
+      "name": "残光のローブ",
+      "dungeon": 6,
+      "def": 28,
+      "recipe": [
+        [
+          "R06",
+          1
+        ],
+        [
+          "M14",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "幸運",
+        "力の鍛錬"
+      ]
+    },
+    {
+      "id": "RA07",
+      "name": "名将の鎧",
+      "dungeon": 7,
+      "def": 40,
+      "recipe": [
+        [
+          "R07",
+          1
+        ],
+        [
+          "M16",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "腕力",
+        "頑丈",
+        "守りの鍛錬"
+      ]
+    },
+    {
+      "id": "RA08",
+      "name": "魔王の心臓鎧",
+      "dungeon": 8,
+      "def": 70,
+      "recipe": [
+        [
+          "R08",
+          1
+        ],
+        [
+          "M20",
+          3
+        ]
+      ],
+      "guaranteed": [
+        "腕力",
+        "頑丈",
+        "幸運",
+        "機敏",
+        "耐久"
+      ]
+    }
+  ],
+  "accessories": [
+    {
+      "id": "C01",
+      "name": "木の指輪",
+      "dungeon": 1,
+      "evolvesTo": "C03",
+      "recipe": [
+        [
+          "M02",
+          2
+        ]
+      ]
+    },
+    {
+      "id": "C02",
+      "name": "葉っぱのお守り",
+      "dungeon": 1,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M01",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "C10",
+      "name": "毒消しの腕輪",
+      "dungeon": 2,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M04",
+          2
+        ],
+        [
+          "M05",
+          1
+        ]
+      ]
+    },
+    {
+      "id": "C03",
+      "name": "銅の指輪",
+      "dungeon": 3,
+      "evolvesTo": "C05",
+      "recipe": [
+        [
+          "C01",
+          1
+        ],
+        [
+          "M06",
+          2
+        ]
+      ]
+    },
+    {
+      "id": "C04",
+      "name": "フェアリーの羽飾り",
+      "dungeon": 3,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M06",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "C11",
+      "name": "採掘者のお守り",
+      "dungeon": 4,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M09",
+          2
+        ],
+        [
+          "M10",
+          1
+        ]
+      ]
+    },
+    {
+      "id": "C05",
+      "name": "銀の指輪",
+      "dungeon": 5,
+      "evolvesTo": "C07",
+      "recipe": [
+        [
+          "C03",
+          1
+        ],
+        [
+          "M13",
+          2
+        ]
+      ]
+    },
+    {
+      "id": "C06",
+      "name": "鉱石のペンダント",
+      "dungeon": 5,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M13",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "C12",
+      "name": "墓守の首飾り",
+      "dungeon": 6,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M14",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "C13",
+      "name": "地縛霊の指輪",
+      "dungeon": 6,
+      "evolvesTo": "C05",
+      "recipe": [
+        [
+          "M15",
+          2
+        ],
+        [
+          "M14",
+          1
+        ]
+      ]
+    },
+    {
+      "id": "C07",
+      "name": "金の指輪",
+      "dungeon": 7,
+      "evolvesTo": "C09",
+      "recipe": [
+        [
+          "C05",
+          1
+        ],
+        [
+          "M17",
+          2
+        ]
+      ]
+    },
+    {
+      "id": "C08",
+      "name": "魂の指輪",
+      "dungeon": 7,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "M17",
+          3
+        ]
+      ]
+    },
+    {
+      "id": "C09",
+      "name": "王家の指輪",
+      "dungeon": 8,
+      "evolvesTo": null,
+      "recipe": [
+        [
+          "C07",
+          1
+        ],
+        [
+          "M20",
+          2
+        ]
+      ]
+    }
+  ],
+  "rareAccessories": [
+    {
+      "id": "RC01",
+      "name": "四つ葉の指輪",
+      "dungeon": 1,
+      "recipe": [
+        [
+          "R01",
+          1
+        ],
+        [
+          "M03",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "幸運"
+      ]
+    },
+    {
+      "id": "RC02",
+      "name": "虹鱗の腕輪",
+      "dungeon": 2,
+      "recipe": [
+        [
+          "R02",
+          1
+        ],
+        [
+          "M04",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "耐久",
+        "機敏"
+      ]
+    },
+    {
+      "id": "RC03",
+      "name": "大妖精の首飾り",
+      "dungeon": 3,
+      "recipe": [
+        [
+          "R03",
+          1
+        ],
+        [
+          "M08",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "幸運",
+        "体力の鍛錬"
+      ]
+    },
+    {
+      "id": "RC04",
+      "name": "輝石の指輪",
+      "dungeon": 4,
+      "recipe": [
+        [
+          "R04",
+          1
+        ],
+        [
+          "M09",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "頑丈",
+        "力の鍛錬"
+      ]
+    },
+    {
+      "id": "RC05",
+      "name": "守護結晶の指輪",
+      "dungeon": 5,
+      "recipe": [
+        [
+          "R05",
+          1
+        ],
+        [
+          "M12",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "頑丈",
+        "幸運",
+        "守りの鍛錬"
+      ]
+    },
+    {
+      "id": "RC06",
+      "name": "残光のペンダント",
+      "dungeon": 6,
+      "recipe": [
+        [
+          "R06",
+          1
+        ],
+        [
+          "M15",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "幸運",
+        "力の鍛錬"
+      ]
+    },
+    {
+      "id": "RC07",
+      "name": "名将の指輪",
+      "dungeon": 7,
+      "recipe": [
+        [
+          "R07",
+          1
+        ],
+        [
+          "M17",
+          2
+        ]
+      ],
+      "guaranteed": [
+        "腕力",
+        "頑丈",
+        "守りの鍛錬"
+      ]
+    },
+    {
+      "id": "RC08",
+      "name": "魔王の心臓飾り",
+      "dungeon": 8,
+      "recipe": [
+        [
+          "R08",
+          1
+        ],
+        [
+          "M19",
+          3
+        ]
+      ],
+      "guaranteed": [
+        "腕力",
+        "頑丈",
+        "幸運",
+        "機敏",
+        "耐久"
+      ]
+    }
+  ],
+  "enemies": [
+    {
+      "dungeon": 1,
+      "name": "草の精霊",
+      "kind": "雑魚",
+      "hp": 30,
+      "atk": 8,
+      "def": 4,
+      "spd": 12
+    },
+    {
+      "dungeon": 1,
+      "name": "草むらの王",
+      "kind": "ボス",
+      "hp": 66,
+      "atk": 18,
+      "def": 9,
+      "spd": 17
+    },
+    {
+      "dungeon": 2,
+      "name": "毒カエル",
+      "kind": "雑魚",
+      "hp": 90,
+      "atk": 17,
+      "def": 9,
+      "spd": 14
+    },
+    {
+      "dungeon": 2,
+      "name": "沼の主",
+      "kind": "ボス",
+      "hp": 198,
+      "atk": 37,
+      "def": 20,
+      "spd": 19
+    },
+    {
+      "dungeon": 3,
+      "name": "フェアリー",
+      "kind": "雑魚",
+      "hp": 150,
+      "atk": 26,
+      "def": 14,
+      "spd": 16
+    },
+    {
+      "dungeon": 3,
+      "name": "森狼の頭目",
+      "kind": "ボス",
+      "hp": 330,
+      "atk": 57,
+      "def": 31,
+      "spd": 21
+    },
+    {
+      "dungeon": 4,
+      "name": "採掘ゴーレム",
+      "kind": "雑魚",
+      "hp": 210,
+      "atk": 35,
+      "def": 19,
+      "spd": 18
+    },
+    {
+      "dungeon": 4,
+      "name": "採掘場の監督",
+      "kind": "ボス",
+      "hp": 462,
+      "atk": 77,
+      "def": 42,
+      "spd": 23
+    },
+    {
+      "dungeon": 5,
+      "name": "洞窟コウモリ",
+      "kind": "雑魚",
+      "hp": 270,
+      "atk": 44,
+      "def": 24,
+      "spd": 20
+    },
+    {
+      "dungeon": 5,
+      "name": "鉱脈の巨人",
+      "kind": "ボス",
+      "hp": 594,
+      "atk": 97,
+      "def": 53,
+      "spd": 25
+    },
+    {
+      "dungeon": 6,
+      "name": "地縛霊",
+      "kind": "雑魚",
+      "hp": 330,
+      "atk": 53,
+      "def": 29,
+      "spd": 22
+    },
+    {
+      "dungeon": 6,
+      "name": "墓地の番人",
+      "kind": "ボス",
+      "hp": 726,
+      "atk": 117,
+      "def": 64,
+      "spd": 27
+    },
+    {
+      "dungeon": 7,
+      "name": "古戦士の霊",
+      "kind": "雑魚",
+      "hp": 390,
+      "atk": 62,
+      "def": 34,
+      "spd": 24
+    },
+    {
+      "dungeon": 7,
+      "name": "古戦場の将軍",
+      "kind": "ボス",
+      "hp": 858,
+      "atk": 136,
+      "def": 75,
+      "spd": 29
+    },
+    {
+      "dungeon": 8,
+      "name": "魔獣",
+      "kind": "雑魚",
+      "hp": 450,
+      "atk": 71,
+      "def": 39,
+      "spd": 26
+    },
+    {
+      "dungeon": 8,
+      "name": "魔王",
+      "kind": "ボス",
+      "hp": 990,
+      "atk": 156,
+      "def": 86,
+      "spd": 31
+    }
+  ]
+}
+</script>
+<script>
+// ===================== データロード =====================
+const GAME_DATA = JSON.parse(document.getElementById('game-data').textContent);
+
+// ===================== 計算式（formulas.pyのJS版） =====================
+function corruptionRange(worldLevel) {
+  if (worldLevel <= 0) return [0, 0];
+  const lo = (worldLevel - 1) * 200 + 1;
+  const hi = worldLevel * 200;
+  return [lo, hi];
+}
+function rollCorruption(worldLevel) {
+  const [lo, hi] = corruptionRange(worldLevel);
+  if (hi === 0) return 0;
+  return lo + Math.floor(Math.random() * (hi - lo + 1));
+}
+const CORRUPTION_BOOST_CAP = 10.0;
+const CORRUPTION_BOOST_K = 0.0008;
+function corruptionBoost(corruption) {
+  if (corruption <= 0) return 1.0;
+  return 1 + (CORRUPTION_BOOST_CAP - 1) * (1 - Math.exp(-CORRUPTION_BOOST_K * corruption));
+}
+function requiredAnalysisLevel(line) {
+  if (line < 250) return null;
+  const stepsBeyond200 = Math.floor((line - 200) / 50);
+  return 9 + stepsBeyond200;
+}
+const ENEMY_WORLDLEVEL_CAP = 8.0;
+const ENEMY_WORLDLEVEL_K = 0.15;
+function enemyWorldLevelMultiplier(worldLevel) {
+  if (worldLevel <= 0) return 1.0;
+  return 1 + (ENEMY_WORLDLEVEL_CAP - 1) * (1 - Math.exp(-ENEMY_WORLDLEVEL_K * worldLevel));
+}
+function calcDamage(atk, def) {
+  return Math.max(1, Math.round(atk - def));
+}
+
+// ===================== ゲームステート =====================
+const ABILITY_POOL = ["耐久","腕力","頑丈","機敏","幸運","体力の鍛錬","力の鍛錬","守りの鍛錬"];
+
+const state = {
+  worldLevel: 0,
+  analysisLevel: 1,
+  materials: {},      // id -> {count, corruptions: [..]}
+  inventory: [],       // クラフト済み装備 [{uid, defId, category, abilities:[{name,lv}], corruption}]
+  equipped: { weapon: null, armor: null, accessory: null }, // uid
+  currentDungeon: null,
+  exploreState: null,  // {floorIndex, log:[], finished}
+  logSelectedIndex: null,
+};
+
+function findDef(category, id) {
+  const pools = {
+    weapon: [...GAME_DATA.weapons, ...GAME_DATA.rareWeapons],
+    armor: [...GAME_DATA.armors, ...GAME_DATA.rareArmors],
+    accessory: [...GAME_DATA.accessories, ...GAME_DATA.rareAccessories],
+  };
+  return pools[category].find(d => d.id === id);
+}
+function isRareId(id) { return id.startsWith('R') && (id.startsWith('RW') || id.startsWith('RA') || id.startsWith('RC')); }
+
+function getMaterialDef(id) {
+  return [...GAME_DATA.materials, ...GAME_DATA.rareMaterials].find(m => m.id === id);
+}
+
+// ===================== 初期素材を少し配布（テスト用） =====================
+function addMaterial(id, count, corruption) {
+  if (!state.materials[id]) state.materials[id] = { count: 0, corruptions: [] };
+  state.materials[id].count += count;
+  for (let i = 0; i < count; i++) state.materials[id].corruptions.push(corruption || 0);
+}
+
+// ===================== プレイヤーステータス計算 =====================
+// 各装備が持つ能力(ability)が、Lv1基礎値 / LvUP成長値 にどう乗るかのマッピング
+const ABILITY_EFFECT = {
+  "耐久": { stat: "hp", target: "base" },
+  "腕力": { stat: "str", target: "base" },
+  "頑丈": { stat: "vit", target: "base" },
+  "機敏": { stat: "spd", target: "base" },
+  "幸運": { stat: "luk", target: "base" },
+  "体力の鍛錬": { stat: "hp", target: "growth" },
+  "力の鍛錬": { stat: "str", target: "growth" },
+  "守りの鍛錬": { stat: "vit", target: "growth" },
+};
+// 能力1Lvあたりの基礎値増加（テスト用の仮値）
+const ABILITY_BASE_PER_LV = { hp: 30, str: 80, vit: 50, spd: 3, luk: 2 };
+const ABILITY_GROWTH_PER_LV = { hp: 3, str: 2, vit: 2, spd: 0.5, luk: 0.3 };
+
+function computePlayerStats() {
+  // ベース
+  const base = { hp: 60, str: 5, vit: 5, spd: 1, luk: 1 };
+  const growth = { hp: 18, str: 1, vit: 2, spd: 1, luk: 0 };
+  let totalCorruptionSum = 0, totalCorruptionCount = 0;
+
+  ['weapon','armor','accessory'].forEach(cat => {
+    const uid = state.equipped[cat];
+    if (!uid) return;
+    const item = state.inventory.find(it => it.uid === uid);
+    if (!item) return;
+    item.abilities.forEach(ab => {
+      const eff = ABILITY_EFFECT[ab.name];
+      if (!eff) return;
+      if (eff.target === 'base') base[eff.stat] += ABILITY_BASE_PER_LV[eff.stat] * ab.lv;
+      else growth[eff.stat] += ABILITY_GROWTH_PER_LV[eff.stat] * ab.lv;
+    });
+    if (item.corruption > 0) { totalCorruptionSum += item.corruption; totalCorruptionCount++; }
+  });
+
+  const avgCorruption = totalCorruptionCount > 0 ? totalCorruptionSum / totalCorruptionCount : 0;
+  const boost = corruptionBoost(avgCorruption);
+
+  // 武器ATK・防具DEF
+  let weaponAtk = 0, armorDef = 0;
+  const wItem = state.inventory.find(it => it.uid === state.equipped.weapon);
+  const aItem = state.inventory.find(it => it.uid === state.equipped.armor);
+  if (wItem) { const d = findDef('weapon', wItem.defId); weaponAtk = d ? d.atk : 0; }
+  if (aItem) { const d = findDef('armor', aItem.defId); armorDef = d ? d.def : 0; }
+
+  return { base, growth, boost, avgCorruption, weaponAtk, armorDef };
+}
+
+function computeRating(stats) {
+  const totalAtk = stats.weaponAtk * stats.boost;
+  const totalDef = stats.armorDef * stats.boost;
+  const hp = stats.base.hp * stats.boost;
+  return Math.round(totalAtk * 2 + totalDef * 2 + hp * 0.5);
+}
+
+// ===================== 危険度ラベル =====================
+function dangerLabelForDungeon(dungeonId) {
+  const stats = computePlayerStats();
+  const playerPower = (stats.weaponAtk + stats.armorDef) * stats.boost + stats.base.hp * stats.boost * 0.3;
+  // ダンジョンのボス基準
+  const boss = GAME_DATA.enemies.find(e => e.dungeon === dungeonId && e.kind === 'ボス');
+  const mult = enemyWorldLevelMultiplier(state.worldLevel);
+  const bossPower = (boss.atk + boss.def) * mult + boss.hp * mult * 0.3;
+  const ratio = playerPower / bossPower;
+  if (ratio >= 2.0) return { label: '安全', cls: 'danger-safe' };
+  if (ratio >= 1.2) return { label: '注意', cls: 'danger-caution' };
+  if (ratio >= 0.7) return { label: '危険', cls: 'danger-danger' };
+  return { label: '自殺行為', cls: 'danger-suicide' };
+}
+
+// ===================== レンダリング: ダンジョン一覧 =====================
+function renderDungeonList() {
+  const el = document.getElementById('dungeonList');
+  el.innerHTML = '';
+  GAME_DATA.dungeons.forEach(d => {
+    const danger = dangerLabelForDungeon(d.id);
+    const div = document.createElement('div');
+    div.className = 'dungeon-item';
+    div.innerHTML = `
+      <div>
+        <div style="font-weight:600;">${d.id}. ${d.name}</div>
+        <div class="muted">${d.theme}</div>
+      </div>
+      <span class="danger-label ${danger.cls}">${danger.label}</span>
+    `;
+    div.onclick = () => startExplore(d.id);
+    el.appendChild(div);
+  });
+}
+
+// ===================== 探索ロジック =====================
+function startExplore(dungeonId) {
+  state.currentDungeon = dungeonId;
+  state.exploreState = { floorIndex: 1, log: [], finished: false, dead: false };
+  document.getElementById('explorePanel').classList.remove('hidden');
+  document.getElementById('logPanel').classList.remove('hidden');
+  document.getElementById('exploreDungeonName').textContent =
+    GAME_DATA.dungeons.find(d => d.id === dungeonId).name;
+  updateExploreUI();
+}
+
+function getEnemyForFloor(dungeonId, floorIndex) {
+  const pool = GAME_DATA.enemies.filter(e => e.dungeon === dungeonId);
+  const isBossFloor = floorIndex % 5 === 0;
+  const candidates = pool.filter(e => isBossFloor ? e.kind === 'ボス' : e.kind === '雑魚');
+  return candidates[0] || pool[0];
+}
+
+function runOneTurn() {
+  const ex = state.exploreState;
+  if (!ex || ex.finished) return;
+  const dungeonId = state.currentDungeon;
+  const enemyDef = getEnemyForFloor(dungeonId, ex.floorIndex);
+  const mult = enemyWorldLevelMultiplier(state.worldLevel);
+  const enemy = {
+    name: enemyDef.name,
+    hp: Math.round(enemyDef.hp * mult),
+    atk: Math.round(enemyDef.atk * mult),
+    def: Math.round(enemyDef.def * mult),
+    spd: enemyDef.spd,
+  };
+  const stats = computePlayerStats();
+  const playerAtk = stats.weaponAtk * stats.boost;
+  const playerDef = stats.armorDef * stats.boost;
+  const playerHp = Math.round(stats.base.hp * stats.boost);
+  const playerSpd = stats.base.spd;
+
+  const turnLog = { time: new Date(), enemyName: enemy.name, floor: ex.floorIndex, actions: [], result: null, drops: [] };
+  let curEnemyHp = enemy.hp;
+  let curPlayerHp = playerHp;
+  const playerFirst = playerSpd >= enemy.spd;
+
+  function playerAttack() {
+    const dmg = calcDamage(playerAtk, enemy.def);
+    curEnemyHp -= dmg;
+    turnLog.actions.push({ side: 'player', dmg, targetHpLeft: Math.max(0, curEnemyHp) });
+  }
+  function enemyAttack() {
+    const dmg = calcDamage(enemy.atk, playerDef);
+    curPlayerHp -= dmg;
+    turnLog.actions.push({ side: 'enemy', dmg, targetHpLeft: Math.max(0, curPlayerHp) });
+  }
+
+  let rounds = 0;
+  while (curEnemyHp > 0 && curPlayerHp > 0 && rounds < 50) {
+    if (playerFirst) { playerAttack(); if (curEnemyHp <= 0) break; enemyAttack(); }
+    else { enemyAttack(); if (curPlayerHp <= 0) break; playerAttack(); }
+    rounds++;
+  }
+
+  if (curPlayerHp <= 0) {
+    turnLog.result = 'dead';
+    ex.finished = true;
+    ex.dead = true;
+  } else {
+    turnLog.result = 'win';
+    // ドロップ処理：そのダンジョンの通常素材からランダム1つ + 低確率レア
+    const mats = GAME_DATA.materials.filter(m => m.dungeon === dungeonId);
+    const rare = GAME_DATA.rareMaterials.find(m => m.dungeon === dungeonId);
+    const dropMat = mats[Math.floor(Math.random() * mats.length)];
+    const corruption = rollCorruption(state.worldLevel);
+    addMaterial(dropMat.id, 1, corruption);
+    turnLog.drops.push({ name: dropMat.name, corruption });
+    if (rare && Math.random() < 0.05) {
+      const rc = rollCorruption(state.worldLevel);
+      addMaterial(rare.id, 1, rc);
+      turnLog.drops.push({ name: rare.name, corruption: rc, isRare: true });
+    }
+    ex.floorIndex++;
+    if (ex.floorIndex > 10) { ex.finished = true; }
+  }
+
+  ex.log.unshift(turnLog);
+  updateExploreUI();
+}
+
+function retreatExplore() {
+  if (!state.exploreState) return;
+  state.exploreState.finished = true;
+  state.exploreState.retreated = true;
+  updateExploreUI();
+}
+
+function updateExploreUI() {
+  const ex = state.exploreState;
+  if (!ex) return;
+  const progress = Math.min(100, (ex.floorIndex / 10) * 100);
+  document.getElementById('exploreProgress').style.width = progress + '%';
+  document.getElementById('exploreFloor').textContent = `${Math.min(ex.floorIndex,10)}/10階`;
+
+  let statusText = `${ex.floorIndex}階を探索中`;
+  if (ex.dead) statusText = '全滅...素材をすべて失った（探索終了）';
+  else if (ex.retreated) statusText = '途中帰還した（素材を持って帰還）';
+  else if (ex.finished) statusText = '最深部に到達！帰還した';
+  document.getElementById('exploreStatus').textContent = statusText;
+
+  document.getElementById('btnNextStep').disabled = ex.finished;
+  document.getElementById('btnRetreat').disabled = ex.finished;
+
+  if (ex.dead) {
+    // 死亡：このセッションで得た素材を全ロスト
+    ex.log.forEach(l => {
+      l.drops.forEach(d => {
+        // ロスト処理（簡易：該当素材を1減らす。テスト版なので簡略化)
+      });
+    });
+  }
+
+  renderLogList();
+  renderTopBar();
+}
+
+function renderLogList() {
+  const el = document.getElementById('logList');
+  const ex = state.exploreState;
+  el.innerHTML = '';
+  if (!ex) return;
+  ex.log.forEach((entry, idx) => {
+    const div = document.createElement('div');
+    div.className = 'log-entry';
+    const timeStr = entry.time.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+    let summary = entry.result === 'dead'
+      ? `${entry.enemyName}にやられた`
+      : `${entry.enemyName}を倒した`;
+    div.innerHTML = `<span class="t">${timeStr}</span>${entry.floor}階 ${summary}`;
+    div.onclick = () => showLogDetail(entry);
+    el.appendChild(div);
+  });
+}
+
+function showLogDetail(entry) {
+  const modal = document.getElementById('modalRoot');
+  let actionsHtml = entry.actions.map(a => {
+    return a.side === 'player'
+      ? `<div class="log-entry">たまの攻撃：${entry.enemyName}に${a.dmg}のダメージ（残り${a.targetHpLeft}）</div>`
+      : `<div class="log-entry">${entry.enemyName}の反撃：たまに${a.dmg}のダメージ（残り${a.targetHpLeft}）</div>`;
+  }).join('');
+  let dropsHtml = entry.drops.length
+    ? entry.drops.map(d => `<div class="log-entry">${d.name}を入手（侵食度${Math.round(d.corruption)}）${d.isRare ? ' ★レア' : ''}</div>`).join('')
+    : '';
+  let resultHtml = entry.result === 'dead'
+    ? `<div class="log-entry" style="color:var(--danger);">全滅した…</div>`
+    : `<div class="log-entry">${entry.enemyName}を倒した</div>`;
+
+  modal.innerHTML = `
+    <div class="modal-overlay" id="logModalOverlay">
+      <div class="modal">
+        <h3>${entry.floor}階の記録</h3>
+        ${actionsHtml}
+        ${resultHtml}
+        ${dropsHtml}
+        <button class="secondary" style="margin-top:10px;width:100%;" id="closeLogModal">閉じる</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('closeLogModal').onclick = () => { modal.innerHTML = ''; };
+  document.getElementById('logModalOverlay').onclick = (e) => { if (e.target.id === 'logModalOverlay') modal.innerHTML = ''; };
+}
+
+// ===================== クラフト（SMITH） =====================
+function getRecipePools(category) {
+  if (category === 'weapon') return [...GAME_DATA.weapons, ...GAME_DATA.rareWeapons];
+  if (category === 'armor') return [...GAME_DATA.armors, ...GAME_DATA.rareArmors];
+  return [...GAME_DATA.accessories, ...GAME_DATA.rareAccessories];
+}
+
+function hasInventoryItem(defId) {
+  return state.inventory.find(it => it.defId === defId);
+}
+
+function canCraft(recipeDef, category) {
+  return recipeDef.recipe.every(([matOrItemId, need]) => {
+    if (matOrItemId.startsWith('M') || matOrItemId.startsWith('R')) {
+      const have = state.materials[matOrItemId]?.count || 0;
+      return have >= need;
+    } else {
+      // 装備消費型（進化）
+      return hasInventoryItem(matOrItemId);
+    }
+  });
+}
+
+function renderRecipeList() {
+  const category = document.getElementById('smithCategory').value;
+  const pool = getRecipePools(category);
+  const el = document.getElementById('recipeList');
+  el.innerHTML = '';
+  pool.forEach(def => {
+    const craftable = canCraft(def, category);
+    const div = document.createElement('div');
+    div.className = 'recipe-card' + (craftable ? ' craftable' : '');
+    const isRare = def.id.match(/^R[WAC]/);
+    const recipeHtml = def.recipe.map(([id, need]) => {
+      let name, have;
+      if (id.startsWith('M') || (id.startsWith('R') && id.length === 3)) {
+        const md = getMaterialDef(id);
+        name = md ? md.name : id;
+        have = state.materials[id]?.count || 0;
+      } else {
+        const owned = hasInventoryItem(id);
+        const d2 = findDef(category, id);
+        name = d2 ? d2.name : id;
+        have = owned ? 1 : 0;
+      }
+      const ok = have >= need;
+      return `<span class="recipe-need ${ok ? 'ok' : 'lack'}">${name} ${have}/${need}</span>`;
+    }).join('　');
+    div.innerHTML = `
+      <div class="row">
+        <span class="item-name">${def.name}${isRare ? ' ★' : ''}</span>
+        <button class="small" ${craftable ? '' : 'disabled'} data-craft="${def.id}" data-cat="${category}">クラフト</button>
+      </div>
+      <div style="margin-top:4px;">${recipeHtml}</div>
+    `;
+    el.appendChild(div);
+  });
+  el.querySelectorAll('[data-craft]').forEach(btn => {
+    btn.onclick = () => craftItem(btn.dataset.craft, btn.dataset.cat);
+  });
+}
+
+function rollAbilitiesFromMaterials(materialIds, isRareCraft, guaranteed) {
+  // 通常: 使用素材のweightsからランダムに最大3つ選ぶ（重複OK、簡易実装）
+  let pool = [];
+  materialIds.forEach(id => {
+    const md = getMaterialDef(id);
+    if (md) pool.push(...md.weights);
+  });
+  if (pool.length === 0) pool = ABILITY_POOL;
+  const abilities = [];
+  const slots = isRareCraft ? (guaranteed ? guaranteed.length : 3) : 3;
+  if (isRareCraft && guaranteed) {
+    guaranteed.forEach(name => abilities.push({ name, lv: 5 + Math.floor(Math.random() * 5) }));
+  } else {
+    for (let i = 0; i < slots; i++) {
+      const name = pool[Math.floor(Math.random() * pool.length)];
+      abilities.push({ name, lv: 1 + Math.floor(Math.random() * 5) });
+    }
+  }
+  return abilities;
+}
+
+let uidCounter = 1;
+function craftItem(defId, category) {
+  const def = findDef(category, defId);
+  if (!def) return;
+  const isRare = !!def.guaranteed;
+  // 素材/装備消費
+  const usedMaterialIds = [];
+  const usedCorruptions = [];
+  def.recipe.forEach(([id, need]) => {
+    if (id.startsWith('M') || (id.startsWith('R') && id.length === 3)) {
+      const m = state.materials[id];
+      for (let i = 0; i < need; i++) {
+        usedCorruptions.push(m.corruptions.pop());
+        usedMaterialIds.push(id);
+      }
+      m.count -= need;
+    } else {
+      // 進化元装備を消費
+      const idx = state.inventory.findIndex(it => it.defId === id);
+      if (idx >= 0) {
+        usedCorruptions.push(state.inventory[idx].corruption || 0);
+        state.inventory.splice(idx, 1);
+        // 装備していたら外す
+        Object.keys(state.equipped).forEach(k => {
+          if (state.equipped[k] && !state.inventory.find(it => it.uid === state.equipped[k])) state.equipped[k] = null;
+        });
+      }
+    }
+  });
+
+  const abilities = rollAbilitiesFromMaterials(usedMaterialIds, isRare, def.guaranteed);
+  const corruption = usedCorruptions.length ? usedCorruptions.reduce((a,b)=>a+b,0) / usedCorruptions.length : 0;
+
+  const item = {
+    uid: 'item' + (uidCounter++),
+    defId,
+    category,
+    abilities,
+    corruption,
+  };
+  state.inventory.push(item);
+  renderRecipeList();
+  renderMaterialGrid();
+  alert(`${def.name} をクラフトした！`);
+}
+
+// ===================== ITEM画面 =====================
+function renderItemList() {
+  const el = document.getElementById('itemList');
+  el.innerHTML = '';
+  if (state.inventory.length === 0) {
+    el.innerHTML = '<p class="muted">まだ装備がありません。SMITHでクラフトしましょう。</p>';
+    return;
+  }
+  state.inventory.forEach(item => {
+    const def = findDef(item.category, item.defId);
+    const isEquipped = state.equipped[item.category] === item.uid;
+    const div = document.createElement('div');
+    div.className = 'item-card' + (isEquipped ? ' equipped' : '');
+    const statLine = item.category === 'weapon' ? `ATK:${def.atk}` : item.category === 'armor' ? `DEF:${def.def}` : '';
+    const abilitiesHtml = item.abilities.map(a => `<span class="ability-tag">${a.name} Lv${a.lv}</span>`).join('');
+    div.innerHTML = `
+      <div class="row">
+        <span class="item-name">${isEquipped ? '【E】' : ''}${def.name} (${statLine}) 侵食度${Math.round(item.corruption)}</span>
+        <button class="small ${isEquipped ? 'secondary' : ''}" data-equip="${item.uid}" data-cat="${item.category}">${isEquipped ? '解除' : '装備'}</button>
+      </div>
+      <div>${abilitiesHtml}</div>
+    `;
+    el.appendChild(div);
+  });
+  el.querySelectorAll('[data-equip]').forEach(btn => {
+    btn.onclick = () => {
+      const cat = btn.dataset.cat;
+      const uid = btn.dataset.equip;
+      state.equipped[cat] = state.equipped[cat] === uid ? null : uid;
+      renderItemList();
+      renderStatusScreen();
+      renderDungeonList();
+      renderTopBar();
+    };
+  });
+}
+
+function renderMaterialGrid() {
+  const el = document.getElementById('materialGrid');
+  el.innerHTML = '';
+  Object.entries(state.materials).forEach(([id, data]) => {
+    if (data.count <= 0) return;
+    const md = getMaterialDef(id);
+    const avgCorruption = data.corruptions.length ? data.corruptions.reduce((a,b)=>a+b,0)/data.corruptions.length : 0;
+    const div = document.createElement('div');
+    div.className = 'mat-card';
+    div.innerHTML = `
+      <div>${md.name}</div>
+      <div class="cnt">×${data.count}</div>
+      <div class="corrupt">${avgCorruption > 0 ? '侵食度' + Math.round(avgCorruption) : ''}</div>
+    `;
+    el.appendChild(div);
+  });
+  if (Object.values(state.materials).every(d => d.count <= 0)) {
+    el.innerHTML = '<p class="muted">素材がありません。ダンジョンで集めましょう。</p>';
+  }
+}
+
+// ===================== STATUS画面 =====================
+function renderStatusScreen() {
+  const stats = computePlayerStats();
+  const table = document.getElementById('statusTable');
+  const rows = [
+    ['HP', Math.round(stats.base.hp * stats.boost), stats.growth.hp],
+    ['STR', Math.round(stats.base.str * stats.boost), stats.growth.str],
+    ['VIT', Math.round(stats.base.vit * stats.boost), stats.growth.vit],
+    ['SPD', Math.round(stats.base.spd * stats.boost), stats.growth.spd],
+    ['LUK(ドロップ補正)', Math.round(stats.base.luk * stats.boost), stats.growth.luk],
+  ];
+  table.innerHTML = `
+    <tr><th>項目</th><th>Lv1(基礎値)</th><th>LvUP</th></tr>
+    ${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>+${r[2].toFixed(1)}</td></tr>`).join('')}
+  `;
+
+  const eqEl = document.getElementById('equippedList');
+  eqEl.innerHTML = ['weapon','armor','accessory'].map(cat => {
+    const uid = state.equipped[cat];
+    if (!uid) return `<div class="muted">${labelOf(cat)}: 未装備</div>`;
+    const item = state.inventory.find(it => it.uid === uid);
+    const def = findDef(cat, item.defId);
+    return `<div>${labelOf(cat)}: <span class="item-name">${def.name}</span></div>`;
+  }).join('');
+
+  document.getElementById('corruptionInfo').textContent =
+    `現在の平均侵食度: ${Math.round(stats.avgCorruption)} → ブースト倍率 x${stats.boost.toFixed(2)}`;
+
+  document.getElementById('topRating').textContent = computeRating(stats).toLocaleString();
+}
+function labelOf(cat) { return cat === 'weapon' ? '武器' : cat === 'armor' ? '防具' : 'アクセサリー'; }
+
+// ===================== COLLECTION画面 =====================
+function renderCollectionScreen() {
+  document.getElementById('analysisLevelDisplay').textContent = state.analysisLevel;
+  const el = document.getElementById('breakthroughList');
+  el.innerHTML = '';
+  for (let line = 50; line <= 500; line += 50) {
+    const req = requiredAnalysisLevel(line);
+    const locked = req !== null && state.analysisLevel < req;
+    const div = document.createElement('div');
+    div.className = 'log-entry';
+    div.innerHTML = `~${line}以上：${locked ? `🔒 解析Lv${req}で解除` : '発現可能'}`;
+    el.appendChild(div);
+  }
+}
+
+// ===================== トップバー =====================
+function renderTopBar() {
+  document.getElementById('topWorldLevel').textContent = state.worldLevel;
+}
+
+// ===================== タブ切り替え =====================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    document.getElementById('screen-' + btn.dataset.screen).classList.remove('hidden');
+    if (btn.dataset.screen === 'item') { renderItemList(); renderMaterialGrid(); }
+    if (btn.dataset.screen === 'status') renderStatusScreen();
+    if (btn.dataset.screen === 'smith') renderRecipeList();
+    if (btn.dataset.screen === 'collection') renderCollectionScreen();
+    if (btn.dataset.screen === 'dungeon') renderDungeonList();
+  };
+});
+
+document.getElementById('smithCategory').onchange = renderRecipeList;
+document.getElementById('btnNextStep').onclick = runOneTurn;
+document.getElementById('btnRetreat').onclick = retreatExplore;
+document.getElementById('btnAnalyze').onclick = () => {
+  state.analysisLevel++;
+  renderCollectionScreen();
+};
+
+// ===================== 初期化 =====================
+function init() {
+  // テスト用に初期素材を少し配布
+  addMaterial('M01', 5, 0);
+  addMaterial('M02', 5, 0);
+  addMaterial('M03', 3, 0);
+  renderDungeonList();
+  renderTopBar();
+}
+init();
+
+</script>
 </body>
 </html>
